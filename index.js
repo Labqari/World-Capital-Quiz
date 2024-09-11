@@ -1,19 +1,28 @@
 import express from "express";
 import bodyParser from "body-parser";
 import pg from "pg";
+import dotenv from "dotenv";
+
+// Load environment variables from .env file
+dotenv.config();
 
 const db = new pg.Client({
-  user: "postgres",
-  host: "localhost",
-  database: "work",
-  password: "123",
-  port: 5432,
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false // Needed for some cloud providers' SSL certificates
+  }
 });
 
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;  // Use the PORT environment variable or default to 3000
 
-db.connect();
+// Connect to the database
+db.connect(err => {
+  if (err) {
+    console.error("Failed to connect to the database", err);
+    process.exit(1); // Exit the process if the connection fails
+  }
+});
 
 let quiz = [];
 db.query("SELECT * FROM capitals", (err, res) => {
@@ -67,4 +76,3 @@ async function nextQuestion() {
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
 });
-
